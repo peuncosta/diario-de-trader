@@ -77,10 +77,16 @@ export default function LoginPage() {
         ativo: usuario.ativo
       };
 
-      // Salvar cookie com expiração mais longa
-      const expirationDate = new Date();
-      expirationDate.setDate(expirationDate.getDate() + 30); // 30 dias
-      document.cookie = `user=${JSON.stringify(userData)}; path=/; expires=${expirationDate.toUTCString()}`;
+      // Configurar cookie com SameSite e Secure
+      const cookieOptions = [
+        `user=${JSON.stringify(userData)}`,
+        'path=/',
+        'max-age=2592000', // 30 dias
+        'SameSite=Strict',
+        process.env.NODE_ENV === 'production' ? 'Secure' : ''
+      ].filter(Boolean).join('; ');
+
+      document.cookie = cookieOptions;
 
       // Inicializar estrutura de dados
       const tradingData = JSON.parse(localStorage.getItem('tradingData') || '{}');
