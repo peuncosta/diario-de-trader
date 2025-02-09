@@ -55,6 +55,24 @@ export default function AdminPage() {
     setUsuarios(usuariosAtualizados.filter(u => !u.isAdmin));
   };
 
+  const registrarNovoUsuario = (dadosUsuario) => {
+    const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+    
+    const novoUsuario = {
+      id: 'user-' + Date.now(),
+      ...dadosUsuario,
+      ativo: true,
+      plano: 'basic', // ou premium
+      dataExpiracao: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 dias
+      dataCriacao: new Date().toISOString()
+    };
+
+    usuarios.push(novoUsuario);
+    localStorage.setItem('usuarios', JSON.stringify(usuarios));
+    
+    return novoUsuario;
+  };
+
   if (isLoading || pageLoading) {
     return (
       <Layout title="Painel Administrativo">

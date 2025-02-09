@@ -74,19 +74,19 @@ export default function LoginPage() {
         nome: usuario.nome,
         email: usuario.email,
         isAdmin: usuario.isAdmin,
-        ativo: usuario.ativo
+        ativo: usuario.ativo,
+        plano: usuario.plano,
+        dataExpiracao: usuario.dataExpiracao
       };
 
-      // Configurar cookie com SameSite e Secure
-      const cookieOptions = [
+      // Cookie com 30 dias de validade e mais seguro
+      document.cookie = [
         `user=${JSON.stringify(userData)}`,
         'path=/',
-        'max-age=2592000', // 30 dias
+        'max-age=2592000',
         'SameSite=Strict',
-        process.env.NODE_ENV === 'production' ? 'Secure' : ''
+        'Secure'
       ].filter(Boolean).join('; ');
-
-      document.cookie = cookieOptions;
 
       // Inicializar estrutura de dados
       const tradingData = JSON.parse(localStorage.getItem('tradingData') || '{}');

@@ -14,7 +14,7 @@ export function UserProvider({ children }) {
   useEffect(() => {
     const loadUser = () => {
       try {
-        // Verificar se existe usuário admin
+        // Garantir que o admin sempre exista
         const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
         if (!usuarios.some(u => u.isAdmin)) {
           const adminUser = {
@@ -24,30 +24,39 @@ export function UserProvider({ children }) {
             senha: 'admin123',
             isAdmin: true,
             ativo: true,
+            plano: 'admin',
+            dataExpiracao: null, // Admin nunca expira
             dataCriacao: new Date().toISOString()
           };
           usuarios.push(adminUser);
           localStorage.setItem('usuarios', JSON.stringify(usuarios));
         }
 
-        // Carregar usuário atual do cookie
+        // Carregar usuário atual
         const cookieUser = document.cookie
           .split('; ')
           .find(row => row.startsWith('user='));
 
         if (cookieUser) {
           const userData = JSON.parse(cookieUser.split('=')[1]);
-          setUser(userData);
+          const userAtual = usuarios.find(u => u.id === userData.id);
           
-          // Verificar se o usuário ainda existe
-          const userExists = usuarios.find(u => u.id === userData.id);
-          if (!userExists) {
+          if (userAtual) {
+            // Verificar se o plano está ativo
+            if (userAtual.dataExpiracao) {
+              const dataExpiracao = new Date(userAtual.dataExpiracao);
+              if (dataExpiracao < new Date()) {
+                throw new Error('Plano expirado');
+              }
+            }
+            
+            setUser(userAtual);
+          } else {
             throw new Error('Usuário não encontrado');
           }
         }
       } catch (error) {
         console.error('Erro ao carregar usuário:', error);
-        // Limpar cookie e redirecionar para login
         document.cookie = "user=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
         router.push('/login');
       } finally {
@@ -56,34 +65,27 @@ export function UserProvider({ children }) {
     };
 
     loadUser();
-  }, [router]);
-
-  // Verificar periodicamente se os dados ainda existem
-  useEffect(() => {
-    const checkData = () => {
-      const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
-      if (user && !usuarios.some(u => u.id === user.id)) {
-        document.cookie = "user=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
-        router.push('/login');
-      }
-    };
-
-    const interval = setInterval(checkData, 30000); // Verificar a cada 30 segundos
+    // Verificar a cada 5 minutos
+    const interval = setInterval(loadUser, 300000);
     return () => clearInterval(interval);
-  }, [user, router]);
+  }, [router]);
 
   const getUserData = () => {
     if (!user?.id) return null;
 
     try {
       const tradingData = JSON.parse(localStorage.getItem('tradingData') || '{}');
-      return tradingData[user.id] || {
-        operacoes: [],
-        contas: [],
-        ativos: [],
-        desafios: [],
-        checklist: []
-      };
+      if (!tradingData[user.id]) {
+        tradingData[user.id] = {
+          operacoes: [],
+          contas: [],
+          ativos: [],
+          desafios: [],
+          checklist: []
+        };
+        localStorage.setItem('tradingData', JSON.stringify(tradingData));
+      }
+      return tradingData[user.id];
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       return null;
@@ -95,7 +97,11 @@ export function UserProvider({ children }) {
 
     try {
       const tradingData = JSON.parse(localStorage.getItem('tradingData') || '{}');
-      tradingData[user.id] = data;
+      tradingData[user.id] = {
+        ...tradingData[user.id],
+        ...data,
+        ultimaAtualizacao: new Date().toISOString()
+      };
       localStorage.setItem('tradingData', JSON.stringify(tradingData));
     } catch (error) {
       console.error('Erro ao salvar dados:', error);
