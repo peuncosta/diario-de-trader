@@ -34,10 +34,9 @@ export default function LoginPage() {
             dataCriacao: new Date().toISOString()
           };
           
-          // Garantir que o admin seja adicionado à lista existente
-          const usuariosAtualizados = [...usuarios, adminUser];
-          localStorage.setItem('usuarios', JSON.stringify(usuariosAtualizados));
-          console.log('Usuário admin criado com sucesso:', adminUser);
+          usuarios.push(adminUser);
+          localStorage.setItem('usuarios', JSON.stringify(usuarios));
+          console.log('Usuário admin criado:', adminUser);
         }
       } catch (error) {
         console.error('Erro ao criar usuário admin:', error);
@@ -54,20 +53,22 @@ export default function LoginPage() {
 
     try {
       const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+      console.log('Usuários encontrados:', usuarios);
+      
       const usuario = usuarios.find(
         u => u.email === formData.email && u.senha === formData.senha
       );
+      console.log('Usuário encontrado:', usuario);
 
       if (!usuario) {
         throw new Error("Credenciais inválidas");
       }
 
-      // Verificar se o usuário está ativo ou é admin
       if (!usuario.ativo && !usuario.isAdmin) {
         throw new Error("Usuário inativo");
       }
 
-      // Criar sessão
+      // Criar sessão com dados completos
       const userData = {
         id: usuario.id,
         nome: usuario.nome,
@@ -76,7 +77,12 @@ export default function LoginPage() {
         ativo: usuario.ativo
       };
 
-      // Criar estrutura de dados se não existir
+      // Salvar cookie com expiração mais longa
+      const expirationDate = new Date();
+      expirationDate.setDate(expirationDate.getDate() + 30); // 30 dias
+      document.cookie = `user=${JSON.stringify(userData)}; path=/; expires=${expirationDate.toUTCString()}`;
+
+      // Inicializar estrutura de dados
       const tradingData = JSON.parse(localStorage.getItem('tradingData') || '{}');
       if (!tradingData[usuario.id]) {
         tradingData[usuario.id] = {
@@ -89,10 +95,7 @@ export default function LoginPage() {
         localStorage.setItem('tradingData', JSON.stringify(tradingData));
       }
 
-      // Salvar sessão e redirecionar
-      document.cookie = `user=${JSON.stringify(userData)}; path=/; max-age=86400`;
       router.push("/");
-
     } catch (err) {
       console.error('Erro no login:', err);
       if (err.message === "Usuário inativo") {

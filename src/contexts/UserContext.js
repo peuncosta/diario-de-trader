@@ -10,98 +10,72 @@ export function UserProvider({ children }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
+  // Carregar dados do usuário
   useEffect(() => {
     const loadUser = () => {
       try {
+        // Verificar se existe usuário admin
+        const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+        if (!usuarios.some(u => u.isAdmin)) {
+          const adminUser = {
+            id: 'admin-' + Date.now(),
+            nome: 'Administrador',
+            email: 'pedro@admin.com',
+            senha: 'admin123',
+            isAdmin: true,
+            ativo: true,
+            dataCriacao: new Date().toISOString()
+          };
+          usuarios.push(adminUser);
+          localStorage.setItem('usuarios', JSON.stringify(usuarios));
+        }
+
+        // Carregar usuário atual do cookie
         const cookieUser = document.cookie
           .split('; ')
           .find(row => row.startsWith('user='));
-        
-        if (!cookieUser) {
-          setIsLoading(false);
-          return;
+
+        if (cookieUser) {
+          const userData = JSON.parse(cookieUser.split('=')[1]);
+          setUser(userData);
         }
-
-        const userData = JSON.parse(cookieUser.split('=')[1]);
-        const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
-        const userExists = usuarios.find(u => u.id === userData.id);
-        
-        if (!userExists) {
-          document.cookie = "user=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
-          router.push('/login');
-          return;
-        }
-
-        // Atualizar dados do usuário
-        const updatedUserData = {
-          ...userData,
-          isAdmin: userExists.isAdmin,
-          ativo: userExists.ativo
-        };
-
-        setUser(updatedUserData);
-        document.cookie = `user=${JSON.stringify(updatedUserData)}; path=/; max-age=86400`;
-
       } catch (error) {
         console.error('Erro ao carregar usuário:', error);
-        document.cookie = "user=; path=/; expires=Thu, 01 Jan 1970 00:00:01 GMT";
-        router.push('/login');
       } finally {
         setIsLoading(false);
       }
     };
 
     loadUser();
-  }, [router]);
+  }, []);
 
   const getUserData = () => {
-    if (!user?.id) return {
-      operacoes: [],
-      contas: [],
-      ativos: [],
-      desafios: [],
-      checklist: []
-    };
+    if (!user?.id) return null;
 
     try {
-      const allData = JSON.parse(localStorage.getItem('tradingData') || '{}');
-      const userData = allData[user.id] || {
+      const tradingData = JSON.parse(localStorage.getItem('tradingData') || '{}');
+      return tradingData[user.id] || {
         operacoes: [],
         contas: [],
         ativos: [],
         desafios: [],
         checklist: []
-      };
-
-      // Garantir que todas as propriedades existam
-      return {
-        operacoes: userData.operacoes || [],
-        contas: userData.contas || [],
-        ativos: userData.ativos || [],
-        desafios: userData.desafios || [],
-        checklist: userData.checklist || []
       };
     } catch (error) {
-      console.error('Erro ao carregar dados do usuário:', error);
-      return {
-        operacoes: [],
-        contas: [],
-        ativos: [],
-        desafios: [],
-        checklist: []
-      };
+      console.error('Erro ao carregar dados:', error);
+      return null;
     }
   };
 
   const saveUserData = (data) => {
     if (!user?.id) return;
-    
+
     try {
-      const allData = JSON.parse(localStorage.getItem('tradingData') || '{}');
-      allData[user.id] = data;
-      localStorage.setItem('tradingData', JSON.stringify(allData));
+      const tradingData = JSON.parse(localStorage.getItem('tradingData') || '{}');
+      tradingData[user.id] = data;
+      localStorage.setItem('tradingData', JSON.stringify(tradingData));
     } catch (error) {
-      console.error('Erro ao salvar dados do usuário:', error);
+      console.error('Erro ao salvar dados:', error);
     }
   };
 

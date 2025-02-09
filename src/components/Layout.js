@@ -56,6 +56,21 @@ export default function Layout({ children, title }) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [menuOpen]);
 
+  useEffect(() => {
+    // Verificar dados a cada minuto
+    const interval = setInterval(() => {
+      const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
+      const tradingData = JSON.parse(localStorage.getItem('tradingData') || '{}');
+      
+      if (!usuarios.length || !Object.keys(tradingData).length) {
+        // Recarregar página se os dados foram perdidos
+        window.location.reload();
+      }
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, []);
+
   return (
     <div style={styles.container}>
       <header style={styles.header(scrolled)}>
