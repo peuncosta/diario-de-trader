@@ -4,6 +4,9 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { globalStyles } from "@/styles/globals";
+import { supabase } from '@/lib/supabase';
+import { auth } from '@/lib/firebase';
+import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -52,63 +55,26 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
-      console.log('Usuários encontrados:', usuarios);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.senha
+      });
+
+      if (error) throw error;
+
+      // Salvar dados do usuário
+      const { data: userData } = await supabase
+        .from('usuarios')
+        .select('*')
+        .eq('id', data.user.id)
+        .single();
+
+      // Salvar na sessão
+      document.cookie = `user=${JSON.stringify(userData)}; path=/; max-age=2592000`;
       
-      const usuario = usuarios.find(
-        u => u.email === formData.email && u.senha === formData.senha
-      );
-      console.log('Usuário encontrado:', usuario);
-
-      if (!usuario) {
-        throw new Error("Credenciais inválidas");
-      }
-
-      if (!usuario.ativo && !usuario.isAdmin) {
-        throw new Error("Usuário inativo");
-      }
-
-      // Criar sessão com dados completos
-      const userData = {
-        id: usuario.id,
-        nome: usuario.nome,
-        email: usuario.email,
-        isAdmin: usuario.isAdmin,
-        ativo: usuario.ativo,
-        plano: usuario.plano,
-        dataExpiracao: usuario.dataExpiracao
-      };
-
-      // Cookie com 30 dias de validade e mais seguro
-      document.cookie = [
-        `user=${JSON.stringify(userData)}`,
-        'path=/',
-        'max-age=2592000',
-        'SameSite=Strict',
-        'Secure'
-      ].filter(Boolean).join('; ');
-
-      // Inicializar estrutura de dados
-      const tradingData = JSON.parse(localStorage.getItem('tradingData') || '{}');
-      if (!tradingData[usuario.id]) {
-        tradingData[usuario.id] = {
-          operacoes: [],
-          contas: [],
-          ativos: [],
-          desafios: [],
-          checklist: []
-        };
-        localStorage.setItem('tradingData', JSON.stringify(tradingData));
-      }
-
-      router.push("/");
-    } catch (err) {
-      console.error('Erro no login:', err);
-      if (err.message === "Usuário inativo") {
-        setError("Sua conta está inativa. Entre em contato com o administrador.");
-      } else {
-        setError("Email ou senha inválidos");
-      }
+      router.push('/');
+    } catch (error) {
+      setError(error.message);
     } finally {
       setLoading(false);
     }
