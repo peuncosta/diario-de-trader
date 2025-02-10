@@ -1,12 +1,10 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { globalStyles } from "@/styles/globals";
 import { supabase } from '@/lib/supabase';
-import { auth } from '@/lib/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -16,38 +14,6 @@ export default function LoginPage() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-
-  // Criar usuário admin na inicialização
-  useEffect(() => {
-    const criarUsuarioAdmin = () => {
-      try {
-        const usuarios = JSON.parse(localStorage.getItem('usuarios') || '[]');
-        
-        // Verificar se já existe algum admin
-        const adminExists = usuarios.some(u => u.isAdmin);
-        
-        if (!adminExists) {
-          const adminUser = {
-            id: 'admin-' + Date.now(),
-            nome: 'Administrador',
-            email: 'pedro@admin.com',
-            senha: 'admin123',
-            isAdmin: true,
-            ativo: true,
-            dataCriacao: new Date().toISOString()
-          };
-          
-          usuarios.push(adminUser);
-          localStorage.setItem('usuarios', JSON.stringify(usuarios));
-          console.log('Usuário admin criado:', adminUser);
-        }
-      } catch (error) {
-        console.error('Erro ao criar usuário admin:', error);
-      }
-    };
-
-    criarUsuarioAdmin();
-  }, []);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
