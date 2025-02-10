@@ -133,6 +133,12 @@ export default function LoginPage() {
       position: "absolute",
       right: "1rem",
     },
+    registerLink: {
+      textAlign: "center",
+      marginTop: "1.5rem",
+      fontSize: "0.9rem",
+      color: "#999",
+    },
   };
 
   return (
@@ -176,12 +182,9 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div style={styles.register}>
-          Não tem uma conta?{" "}
-          <Link href="/registro" style={styles.link}>
-            Registre-se
-          </Link>
-        </div>
+        <p style={styles.registerLink}>
+          Não tem uma conta? <Link href="/register">Registre-se</Link>
+        </p>
       </div>
     </div>
   );
