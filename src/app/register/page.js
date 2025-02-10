@@ -22,6 +22,8 @@ export default function RegisterPage() {
     setLoading(true);
 
     try {
+      console.log('Iniciando registro:', formData);
+      
       // 1. Criar usuário na autenticação
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: formData.email,
@@ -29,9 +31,12 @@ export default function RegisterPage() {
         options: {
           data: {
             nome: formData.nome
-          }
+          },
+          emailRedirectTo: `${window.location.origin}/login`
         }
       });
+
+      console.log('Resposta auth:', authData);
 
       if (authError) throw authError;
 
@@ -49,10 +54,19 @@ export default function RegisterPage() {
           }
         ]);
 
+      console.log('Resposta insert:', userError);
+
       if (userError) throw userError;
 
-      alert('Registro realizado com sucesso! Faça login para continuar.');
-      router.push('/login');
+      // 3. Fazer login automático
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.senha
+      });
+
+      if (signInError) throw signInError;
+
+      router.push('/');
     } catch (error) {
       console.error('Erro no registro:', error);
       setError(error.message);
