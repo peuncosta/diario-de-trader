@@ -55,25 +55,35 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      console.log('Tentando login com:', formData);
+      
       const { data, error } = await supabase.auth.signInWithPassword({
         email: formData.email,
         password: formData.senha
       });
 
+      console.log('Resposta do Supabase:', { data, error });
+
       if (error) throw error;
 
       // Salvar dados do usuário
-      const { data: userData } = await supabase
+      const { data: userData, error: userError } = await supabase
         .from('usuarios')
         .select('*')
         .eq('id', data.user.id)
         .single();
+
+      console.log('Dados do usuário:', userData);
+      console.log('Erro ao buscar usuário:', userError);
+
+      if (userError) throw userError;
 
       // Salvar na sessão
       document.cookie = `user=${JSON.stringify(userData)}; path=/; max-age=2592000`;
       
       router.push('/');
     } catch (error) {
+      console.error('Erro completo:', error);
       setError(error.message);
     } finally {
       setLoading(false);
