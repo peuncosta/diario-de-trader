@@ -31,8 +31,7 @@ export default function RegisterPage() {
         options: {
           data: {
             nome: formData.nome
-          },
-          emailRedirectTo: `${window.location.origin}/login`
+          }
         }
       });
 
@@ -54,25 +53,95 @@ export default function RegisterPage() {
           }
         ]);
 
-      console.log('Resposta insert:', userError);
-
       if (userError) throw userError;
 
-      // 3. Fazer login automático
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email: formData.email,
-        password: formData.senha
-      });
-
-      if (signInError) throw signInError;
-
-      router.push('/');
+      alert('Registro realizado com sucesso! Faça login para continuar.');
+      router.push('/login');
     } catch (error) {
       console.error('Erro no registro:', error);
       setError(error.message);
     } finally {
       setLoading(false);
     }
+  };
+
+  const styles = {
+    container: {
+      minHeight: "100vh",
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+      justifyContent: "center",
+      padding: "2rem",
+      backgroundColor: "#1a1a1a",
+      color: "white",
+    },
+    card: {
+      ...globalStyles.card,
+      width: "100%",
+      maxWidth: "400px",
+      padding: "2rem",
+    },
+    logo: {
+      fontSize: "2rem",
+      textAlign: "center",
+      marginBottom: "2rem",
+      background: "linear-gradient(45deg, #00ff87, #60efff)",
+      backgroundClip: "text",
+      WebkitBackgroundClip: "text",
+      color: "transparent",
+    },
+    form: {
+      display: "grid",
+      gap: "1.5rem",
+    },
+    formGroup: {
+      display: "grid",
+      gap: "0.5rem",
+    },
+    label: {
+      fontSize: "0.9rem",
+      color: "#999",
+    },
+    input: {
+      ...globalStyles.input,
+      width: "100%",
+    },
+    button: {
+      ...globalStyles.button,
+      ...globalStyles.primaryButton,
+      width: "100%",
+      position: "relative",
+    },
+    error: {
+      color: "#ff4444",
+      fontSize: "0.9rem",
+      textAlign: "center",
+      marginTop: "1rem",
+    },
+    loginLink: {
+      textAlign: "center",
+      marginTop: "1.5rem",
+      fontSize: "0.9rem",
+      color: "#999",
+      "& a": {
+        color: "#00ff87",
+        textDecoration: "none",
+        "&:hover": {
+          textDecoration: "underline",
+        },
+      },
+    },
+    spinner: {
+      width: "20px",
+      height: "20px",
+      border: "2px solid rgba(255, 255, 255, 0.3)",
+      borderTop: "2px solid white",
+      borderRadius: "50%",
+      animation: "spin 1s linear infinite",
+      position: "absolute",
+      right: "1rem",
+    },
   };
 
   return (
@@ -121,7 +190,12 @@ export default function RegisterPage() {
             style={styles.button}
             disabled={loading}
           >
-            {loading ? "Registrando..." : "Criar Conta"}
+            {loading ? (
+              <>
+                Registrando...
+                <div style={styles.spinner} />
+              </>
+            ) : "Criar Conta"}
           </button>
 
           <p style={styles.loginLink}>
@@ -131,8 +205,4 @@ export default function RegisterPage() {
       </div>
     </div>
   );
-}
-
-const styles = {
-  // ... estilos iguais ao da página de login
-}; 
+} 
