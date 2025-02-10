@@ -56,6 +56,11 @@ export default function LoginPage() {
     }
   };
 
+  const handleRegisterClick = () => {
+    console.log('Clicou em registrar');
+    router.push('/register');
+  };
+
   const styles = {
     container: {
       minHeight: "100vh",
@@ -119,6 +124,7 @@ export default function LoginPage() {
     link: {
       color: "#00ff87",
       textDecoration: "none",
+      cursor: "pointer",
       "&:hover": {
         textDecoration: "underline",
       },
@@ -183,7 +189,22 @@ export default function LoginPage() {
         </form>
 
         <p style={styles.registerLink}>
-          Não tem uma conta? <Link href="/register">Registre-se</Link>
+          Não tem uma conta?{" "}
+          <Link href="/register" style={styles.link}>
+            Registre-se
+          </Link>
+          {" ou "}
+          <button 
+            onClick={handleRegisterClick}
+            style={{
+              ...styles.link,
+              border: "none",
+              background: "none",
+              padding: 0
+            }}
+          >
+            clique aqui
+          </button>
         </p>
       </div>
     </div>
